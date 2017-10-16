@@ -1,0 +1,6 @@
+shiny
+shinyjs
+XLConnect
+nloptr
+RRF
+parallel

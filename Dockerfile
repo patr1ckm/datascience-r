@@ -1,24 +1,34 @@
 FROM rocker/verse:3.4.1
-MAINTAINER support@civisanalytics.com
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -y --no-install-recommends && \
     apt-get install -y --no-install-recommends \
         curl \
-        wget && \
+        git \
+        wget \
+        fonts-dejavu \
+        gfortran \
+        python-dev \
+        gcc &&  \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# tuck the python client here just in case
 COPY ./requirements-python.txt /requirements-python.txt
 RUN curl -s https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
     python get-pip.py && \
-    pip install -r requirements-python.txt && \
+    pip install --upgrade pip setuptools && \
     rm -rf ~/.cache/pip && \
     rm -f get-pip.py
 
-RUN Rscript -e "devtools::install_github('civisanalytics/civis-r', ref = 'v0.9.1', upgrade_dependencies = FALSE);"
 
-ENV VERSION=2.0.0 \
-    VERSION_MAJOR=2 \
-    VERSION_MINOR=0 \
-    VERSION_MICRO=0
+COPY ./setup.R /setup.R
+RUN Rscript setup.R
+
+
+COPY ./requirements.txt /requirements.txt
+RUN Rscript -e "packages <- readLines('/requirements.txt'); install.packages(packages)"
+
+EXPOSE 3838
+
+WORKDIR /root/work
+
+ENTRYPOINT ["ping", "google"]
